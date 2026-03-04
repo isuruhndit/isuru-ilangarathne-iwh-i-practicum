@@ -1,0 +1,23 @@
+doctype html
+html
+  head
+    title= title
+  body
+    h1 Update Custom Object Form
+
+    a(href="/") Return to the homepage
+
+    form(action="/update-cobj" method="POST")
+  div
+    label(for="firstname") First Name
+    input(type="text" name="firstname" required)
+
+  div
+    label(for="lastname") Last Name
+    input(type="text" name="lastname" required)
+
+  div
+    label(for="email") Email
+    input(type="email" name="email" required)
+
+  button(type="submit") Submit

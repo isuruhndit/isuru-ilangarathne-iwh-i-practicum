@@ -1,3 +1,20 @@
+require('dotenv').config();
+const hubspot = require('@hubspot/api-client');
+
+// Use environment variable instead of hardcoding
+const PRIVATE_APP_ACCESS = process.env.HUBSPOT_PRIVATE_APP_TOKEN;
+
+const hubspotClient = new hubspot.Client({
+  accessToken: PRIVATE_APP_ACCESS
+});
+
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
+
 const express = require('express');
 const axios = require('axios');
 const app = express();
@@ -7,8 +24,58 @@ app.use(express.static(__dirname + '/public'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  res.send("Welcome to the Integrating With HubSpot I Practicum");
+});
+app.get("/update-cobj", (req, res) => {
+  res.render("updates", {
+    title: "Update Custom Object Form | Integrating With HubSpot I Practicum"
+  });
+});
+
+app.post("/update-cobj", (req, res) => {
+  console.log("Form submission:", req.body);
+  res.send("Custom object data submitted successfully.");
+});
+
+app.post("/update-cobj", (req, res) => {
+  const { firstname, lastname, email } = req.body;
+
+  console.log("Contact form data:", firstname, lastname, email);
+
+  res.send("Contact data received successfully.");
+});
+
+app.post('/update-cobj', async (req, res) => {
+  try {
+    const { firstname, lastname, email } = req.body;
+
+    await hubspotClient.crm.contacts.basicApi.create({
+      properties: { firstname, lastname, email }
+    });
+
+    res.redirect('/');
+  } catch (error) {
+    console.error('Error creating contact:', error.response?.body || error);
+    res.status(500).send('Error creating contact');
+  }
+});
+
+app.get('/', async (req, res) => {
+  try {
+    // Get contacts from HubSpot
+    const apiResponse = await hubspotClient.crm.contacts.basicApi.getPage(100); // max 100 contacts
+    const contacts = apiResponse.results;
+
+    // Render homepage.pug and pass the contacts
+    res.render('homepage', { contacts });
+  } catch (error) {
+    console.error('Error fetching contacts:', error.response?.body || error);
+    res.status(500).send('Error fetching contacts');
+  }
+});
 // * Please DO NOT INCLUDE the private app access token in your repo. Don't do this practicum in your normal account.
-const PRIVATE_APP_ACCESS = '';
+
 
 // TODO: ROUTE 1 - Create a new app.get route for the homepage to call your custom object data. Pass this data along to the front-end and create a new pug template in the views folder.
 
@@ -68,4 +135,8 @@ app.post('/update', async (req, res) => {
 
 
 // * Localhost
-app.listen(3000, () => console.log('Listening on http://localhost:3000'));
+const PORT = 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
